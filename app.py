@@ -45,9 +45,11 @@ class Bill(db.Model):
 def random_txn(prefix='TX'):
     return prefix + ''.join(random.choices(string.ascii_uppercase+string.digits, k=8))
 
-@app.before_first_request
-def create_tables():
+# Initialize database tables once at startup
+with app.app_context():
     db.create_all()
+
+
     # add demo data if empty
     if Patient.query.count() == 0:
         p1 = Patient(name='John Doe', email='john@example.com', phone='254712345678', address='Embu Campus', age=30, gender='Male', diagnosis='Flu')
