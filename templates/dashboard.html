@@ -1,0 +1,16 @@
+{% extends 'layout.html' %}{% block content %}
+<div class="row g-3">
+  <div class="col-md-4"><div class="card p-3"><h6>Total Patients</h6><h2>{{ total_patients }}</h2></div></div>
+  <div class="col-md-4"><div class="card p-3"><h6>Appointments</h6><h2>{{ total_appointments }}</h2></div></div>
+  <div class="col-md-4"><div class="card p-3"><h6>Unpaid Bills</h6><h2>{{ unpaid_bills }}</h2></div></div>
+</div>
+<div class="row mt-4">
+  <div class="col-md-8"><div class="card p-3"><canvas id="barChart"></canvas></div></div>
+  <div class="col-md-4"><div class="card p-3"><h6>Notifications</h6>{% for n in notifications %}<div class="small text-muted">{{ n.message }} - {{ n.time }}</div>{% endfor %}</div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('barChart').getContext('2d');
+new Chart(ctx,{type:'bar',data:{labels:['Patients','Appointments','Bills'],datasets:[{label:'Counts',data:[{{ total_patients }},{{ total_appointments }},{{ unpaid_bills }}],backgroundColor:['#0d6efd','#20c997','#ffc107']}]},options:{responsive:true}});
+</script>
+{% endblock %}
