@@ -74,15 +74,15 @@
         </div>
       </div>
 
-      <!-- optional recent items -->
+      <!-- Recent items -->
       <div class="row g-3 mt-3">
         <div class="col-md-6">
           <div class="card p-3">
             <h6>Recent Appointments</h6>
             <ul class="list-group list-group-flush">
-              {% if latest_appointments %}
-                {% for a in latest_appointments %}
-                  <li class="list-group-item small">{{ a.date }} {{ a.time }} — {{ a.doctor }} ({{ a.patient_name }})</li>
+              {% if recent_appointments %}
+                {% for a in recent_appointments %}
+                  <li class="list-group-item small">{{ a.date }} {{ a.time }} — {{ a.doctor }} ({{ a.patient.name }})</li>
                 {% endfor %}
               {% else %}
                 <li class="list-group-item small text-muted">No recent appointments</li>
@@ -93,14 +93,14 @@
 
         <div class="col-md-6">
           <div class="card p-3">
-            <h6>Recent Payments</h6>
+            <h6>Recent Bills</h6>
             <ul class="list-group list-group-flush">
-              {% if latest_bills %}
-                {% for b in latest_bills %}
-                  <li class="list-group-item small">{{ b.date }} — Ksh {{ b.amount }} — {{ b.status }}</li>
+              {% if recent_bills %}
+                {% for b in recent_bills %}
+                  <li class="list-group-item small">{{ b.date_issued.strftime('%Y-%m-%d %H:%M') }} — Ksh {{ "%.2f"|format(b.amount) }} — {{ b.status }} ({{ b.patient.name }})</li>
                 {% endfor %}
               {% else %}
-                <li class="list-group-item small text-muted">No recent payments</li>
+                <li class="list-group-item small text-muted">No recent bills</li>
               {% endif %}
             </ul>
           </div>
