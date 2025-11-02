@@ -1,1 +1,47 @@
-:root{--bg:#e9f7ff;--card:#fff;--accent1:#0d6efd;--accent2:#20c997}body{background:linear-gradient(180deg,var(--bg),#f1fff4);font-family:Arial,Helvetica,sans-serif} .card{border-radius:10px}
+:root{
+  --primary:#1e90ff;    /* sky-blue accent */
+  --dark:#0d3a66;
+  --muted:#6c757d;
+  --card-bg:#ffffff;
+  --page-bg: linear-gradient(180deg,#f6fbff,#eefafc);
+}
+
+body{
+  background: var(--page-bg);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #123;
+}
+
+/* navbar brand */
+.nav-brand{
+  background: linear-gradient(90deg,#0d6efd,#20c997);
+  padding: .6rem 1rem;
+}
+
+/* dashboard specifics */
+.page-title{margin:0; font-weight:700; color:var(--dark);}
+.dashboard-logo{height:48px;}
+
+/* stat cards */
+.stat-card{
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 6px 18px rgba(13,58,102,0.06);
+}
+.stat-card .muted{color:var(--muted); font-size:13px;}
+.stat-number{font-size:28px; font-weight:700; margin-top:6px;}
+
+/* brand card */
+.brand-card{border-radius:12px; background:var(--card-bg); box-shadow: 0 6px 18px rgba(13,58,102,0.06);}
+.brand-large{width:96px; height:auto;}
+
+/* small layout niceties */
+.card{border-radius:12px;}
+.list-group-item{border:0; padding-left:0; padding-right:0;}
+
+/* responsive tweaks */
+@media (max-width:768px){
+  .brand-large{width:68px;}
+  .dashboard-logo{height:36px;}
+}
