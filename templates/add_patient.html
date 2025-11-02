@@ -1,1 +1,10 @@
-{% extends 'layout.html' %}{% block content %}<div class="card p-3"><h5>Add Patient</h5><form method="post"><div class="row g-2"><div class="col-md-6"><input name="name" class="form-control" placeholder="Name" required></div><div class="col-md-6"><input name="phone" class="form-control" placeholder="Phone"></div><div class="col-md-6"><input name="email" class="form-control" placeholder="Email"></div><div class="col-md-6"><input name="age" class="form-control" placeholder="Age" type="number"></div><div class="col-12"><input name="address" class="form-control" placeholder="Address"></div><div class="col-12"><input name="diagnosis" class="form-control" placeholder="Diagnosis"></div></div><div class="mt-3 text-end"><a class="btn btn-secondary" href="{{ url_for('patients') }}">Cancel</a><button class="btn btn-primary" type="submit">Save</button></div></form></div>{% endblock %}
+{% extends 'layout.html' %}{% block content %}<div class="card p-3"><h5>Add Patient</h5>
+    <form method="post"><div class="row g-2"><div class="col-md-6">
+        <input name="name" class="form-control" placeholder="Name" required></div>
+        <div class="col-md-6"><input name="phone" class="form-control" placeholder="Phone"></div>
+        <div class="col-md-6"><input name="email" class="form-control" placeholder="Email"></div>
+        <div class="col-md-6"><input name="age" class="form-control" placeholder="Age" type="number"></div>
+        <div class="col-12"><input name="address" class="form-control" placeholder="Address"></div>
+        <div class="col-12"><input name="diagnosis" class="form-control" placeholder="Diagnosis"></div></div>
+        <div class="mt-3 text-end"><a class="btn btn-secondary" href="{{ url_for('patients') }}">Cancel</a>
+            <button class="btn btn-primary" type="submit">Save</button></div></form></div>{% endblock %}
