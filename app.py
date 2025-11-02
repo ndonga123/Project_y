@@ -9,6 +9,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+# ------------------- MODELS -------------------
 class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
@@ -34,21 +35,23 @@ class Appointment(db.Model):
 
 class Bill(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'))
-    amount = db.Column(db.Float)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
     payment_method = db.Column(db.String(50))
     status = db.Column(db.String(30), default='Pending')
     transaction_id = db.Column(db.String(120))
     description = db.Column(db.String(300))
-    date_issued = db.Column(db.String(40), default=datetime.utcnow().strftime('%Y-%m-%d %H:%M'))
+    date_issued = db.Column(db.DateTime, default=datetime.utcnow)
 
+    patient = db.relationship('Patient', backref='bills')
+
+# ------------------- UTIL -------------------
 def random_txn(prefix='TX'):
     return prefix + ''.join(random.choices(string.ascii_uppercase+string.digits, k=8))
 
-# Initialize database tables once at startup
+# ------------------- DATABASE INIT -------------------
 with app.app_context():
     db.create_all()
-
 
     # add demo data if empty
     if Patient.query.count() == 0:
@@ -59,18 +62,20 @@ with app.app_context():
         b = Bill(patient_id=p1.id, amount=2500.0, payment_method='Cash', status='Paid', transaction_id=random_txn('CASH'))
         db.session.add_all([a,b]); db.session.commit()
 
+# ------------------- ROUTES -------------------
+
 @app.route('/')
 def dashboard():
     total_patients = Patient.query.count()
     total_appointments = Appointment.query.count()
     unpaid_bills = Bill.query.filter_by(status='Pending').count()
     total_billing = sum((b.amount for b in Bill.query.all()))
-    # simple notifications list
     notifications = [{'message':'Welcome to Project_X','time':'now'}]
     return render_template('dashboard.html', total_patients=total_patients,
                            total_appointments=total_appointments, unpaid_bills=unpaid_bills,
                            total_billing=int(total_billing), notifications=notifications)
 
+# -------- Patients --------
 @app.route('/patients')
 def patients():
     return render_template('patients.html', patients=Patient.query.order_by(Patient.created_at.desc()).all())
@@ -107,6 +112,7 @@ def api_patient(id):
     bills = [{'id':b.id,'amount':b.amount,'method':b.payment_method,'status':b.status,'txn':b.transaction_id,'desc':b.description,'date':b.date_issued} for b in p.bills]
     return jsonify({'id':p.id,'name':p.name,'email':p.email,'phone':p.phone,'address':p.address,'age':p.age,'gender':p.gender,'diagnosis':p.diagnosis,'appointments':appts,'bills':bills})
 
+# -------- Appointments --------
 @app.route('/appointments')
 def appointments():
     return render_template('appointments.html', appointments=Appointment.query.order_by(Appointment.date.asc()).all(), patients=Patient.query.all())
@@ -120,9 +126,12 @@ def add_appointment():
 def delete_appointment(id):
     a = Appointment.query.get_or_404(id); db.session.delete(a); db.session.commit(); flash('Deleted','warning'); return redirect(url_for('appointments'))
 
+# -------- Billing System (NEW) --------
 @app.route('/billing')
 def billing():
-    return render_template('billing.html', bills=Bill.query.order_by(Bill.date_issued.desc()).all(), patients=Patient.query.all())
+    bills = Bill.query.order_by(Bill.date_issued.desc()).all()
+    patients = Patient.query.all()
+    return render_template('billing.html', bills=bills, patients=patients)
 
 @app.route('/bill/add', methods=['POST'])
 def add_bill():
@@ -137,10 +146,11 @@ def delete_bill(id):
 def simulate_pay():
     data = request.get_json() or {}
     bill_id = int(data.get('bill_id')); method = data.get('method'); phone = data.get('phone')
-    time.sleep(2)  # spinner
+    time.sleep(2)  # simulate processing
     b = Bill.query.get_or_404(bill_id); b.payment_method = method; b.transaction_id = random_txn('MP'); b.status = 'Paid'; db.session.commit()
     return jsonify({'status':'ok','txn':b.transaction_id})
 
+# -------- Settings & About --------
 @app.route('/settings')
 def settings():
     return render_template('settings.html')
@@ -149,5 +159,6 @@ def settings():
 def about():
     return render_template('about.html')
 
+# ------------------- RUN APP -------------------
 if __name__ == '__main__':
     app.run(debug=True)
