@@ -74,40 +74,6 @@
         </div>
       </div>
 
-      <!-- Recent items -->
-      <div class="row g-3 mt-3">
-        <div class="col-md-6">
-          <div class="card p-3">
-            <h6>Recent Appointments</h6>
-            <ul class="list-group list-group-flush">
-              {% if recent_appointments %}
-                {% for a in recent_appointments %}
-                  <li class="list-group-item small">{{ a.date }} {{ a.time }} — {{ a.doctor }} ({{ a.patient.name }})</li>
-                {% endfor %}
-              {% else %}
-                <li class="list-group-item small text-muted">No recent appointments</li>
-              {% endif %}
-            </ul>
-          </div>
-        </div>
-
-        <div class="col-md-6">
-          <div class="card p-3">
-            <h6>Recent Bills</h6>
-            <ul class="list-group list-group-flush">
-              {% if recent_bills %}
-                {% for b in recent_bills %}
-                  <li class="list-group-item small">{{ b.date_issued.strftime('%Y-%m-%d %H:%M') }} — Ksh {{ "%.2f"|format(b.amount) }} — {{ b.status }} ({{ b.patient.name }})</li>
-                {% endfor %}
-              {% else %}
-                <li class="list-group-item small text-muted">No recent bills</li>
-              {% endif %}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Notifications -->
     <div class="col-lg-5">
       <div class="card p-3">
