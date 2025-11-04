@@ -1,17 +1,28 @@
 {% extends 'layout.html' %}
 {% block content %}
 <style>
-    /* Sticky top-right buttons */
     .top-buttons {
         position: sticky;
-        top: 1rem; /* distance from top */
+        top: 1rem;
         z-index: 1000;
+    }
+    .stat-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        padding: 20px;
+        text-align: center;
+    }
+    .brand-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 </style>
 
 <div class="dashboard-wrapper">
 
-  <!-- Header row with top-right buttons -->
+  <!-- Header row -->
   <div class="header-row mb-4 d-flex justify-content-between align-items-center position-relative">
     <div>
       <h3 class="page-title">Welcome to <span class="brand">Lyncrest Medical Center</span></h3>
@@ -33,7 +44,7 @@
     </div>
   </div>
 
-  <!-- stat cards -->
+  <!-- Stats row -->
   <div class="row g-4">
     <div class="col-md-3">
       <div class="stat-card">
@@ -61,27 +72,75 @@
     </div>
   </div>
 
+  <!-- Main content -->
   <div class="row mt-4 g-4">
-    <!-- Logo & description card -->
     <div class="col-lg-7">
-      <div class="card p-4 brand-card">
+      <div class="card p-4 brand-card mb-4">
         <div class="d-flex align-items-center">
           <img src="{{ url_for('static', filename='logo.png') }}" alt="Lyncrest logo" class="brand-large me-4">
           <div>
             <h4 class="mb-1">Lyncrest Medical Center</h4>
-            <p class="text-muted mb-0">Delivering trusted healthcare. View patients, schedule appointments, and manage billing — all in one place.</p>
+            <p class="text-muted mb-0">Delivering trusted healthcare. Manage patients, appointments, and billing in one place.</p>
           </div>
         </div>
       </div>
 
-    <!-- Notifications -->
+      <!-- Recent appointments -->
+      <div class="card p-3">
+        <h6>Recent Appointments</h6>
+        {% if recent_appointments %}
+          <ul class="list-group list-group-flush">
+            {% for a in recent_appointments %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ a.patient.name }}</strong> — {{ a.doctor }}
+                  <br><small class="text-muted">{{ a.date }} at {{ a.time }}</small>
+                </div>
+                <span class="badge bg-primary">{{ a.status }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="small text-muted mb-0">No recent appointments.</p>
+        {% endif %}
+      </div>
+    </div>
+
     <div class="col-lg-5">
+      <!-- Recent bills -->
+      <div class="card p-3 mb-4">
+        <h6>Recent Bills</h6>
+        {% if recent_bills %}
+          <ul class="list-group list-group-flush">
+            {% for b in recent_bills %}
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ b.patient.name }}</strong><br>
+                  <small>KES {{ "%.2f"|format(b.amount) }} • {{ b.payment_method or 'Pending' }}</small>
+                </div>
+                {% if b.status == 'Paid' %}
+                  <span class="badge bg-success">Paid</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">Pending</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="small text-muted mb-0">No recent bills.</p>
+        {% endif %}
+      </div>
+
+      <!-- Notifications -->
       <div class="card p-3">
         <h6>Notifications</h6>
         {% if notifications %}
           <ul class="list-unstyled mb-0">
             {% for note in notifications %}
-              <li class="py-2 border-bottom small"><strong>{{ note.message }}</strong><div class="text-muted small">{{ note.time }}</div></li>
+              <li class="py-2 border-bottom small">
+                <strong>{{ note.message }}</strong>
+                <div class="text-muted small">{{ note.time }}</div>
+              </li>
             {% endfor %}
           </ul>
         {% else %}

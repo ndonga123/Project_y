@@ -1,142 +1,165 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Billing</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f4f8;
-            margin: 20px;
-        }
-        h2, h3 {
-            color: #0a3d62;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: #ffffff;
-            box-shadow: 0px 0px 8px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #0a3d62;
-            color: #ffffff;
-        }
-        tr:hover {
-            background-color: #f1f6fb;
-        }
-        button {
-            background-color: #0a3d62;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            margin: 2px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        button:hover {
-            background-color: #1e5fa8;
-        }
-        form input, form select {
-            padding: 8px;
-            margin: 4px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-        form button {
-            margin-top: 8px;
-        }
-        .add-bill-form {
-            background-color: #ffffff;
-            padding: 20px;
-            box-shadow: 0px 0px 8px rgba(0,0,0,0.1);
-            border-radius: 6px;
-            max-width: 500px;
-        }
-    </style>
-</head>
-<body>
-    <h2>Billing</h2>
+{% extends 'layout.html' %}
+{% block content %}
+<style>
+  .billing-wrapper {
+    padding: 2rem;
+  }
+  .billing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .billing-header h4 {
+    font-weight: 600;
+  }
+  .billing-card {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    transition: transform 0.2s ease;
+  }
+  .billing-card:hover {
+    transform: translateY(-3px);
+  }
+  .btn-primary {
+    background-color: #007bff;
+    border: none;
+  }
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  .form-select, .form-control {
+    border-radius: 0.75rem;
+  }
+</style>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Patient</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date Issued</th>
-                <th>Actions</th>
-            </tr>
+<div class="billing-wrapper">
+  <div class="billing-header mb-4">
+    <h4><i class="bi bi-cash-stack"></i> Billing Management</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBillModal">
+      <i class="bi bi-plus-circle"></i> Add Bill
+    </button>
+  </div>
+
+  <!-- Billing Summary Cards -->
+  <div class="row mb-4 g-4">
+    <div class="col-md-3">
+      <div class="billing-card text-center">
+        <small class="text-muted">Total Bills</small>
+        <h5 class="text-primary mt-2">{{ bills|length }}</h5>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="billing-card text-center">
+        <small class="text-muted">Unpaid Bills</small>
+        <h5 class="text-danger mt-2">{{ bills|selectattr("status", "equalto", "unpaid")|list|length }}</h5>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="billing-card text-center">
+        <small class="text-muted">Total Revenue</small>
+        <h5 class="text-success mt-2">Ksh {{ bills|sum(attribute='amount') or 0 }}</h5>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="billing-card text-center">
+        <small class="text-muted">Recent Payments</small>
+        <h5 class="text-info mt-2">{{ bills|sort(attribute='date_issued', reverse=True)[:3]|length }}</h5>
+      </div>
+    </div>
+  </div>
+
+  <!-- Billing Table -->
+  <div class="card p-3">
+    <h6 class="mb-3"><i class="bi bi-list-check"></i> Billing Records</h6>
+    {% if bills %}
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Patient</th>
+            <th>Amount (Ksh)</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Date Issued</th>
+            <th>Actions</th>
+          </tr>
         </thead>
         <tbody>
-            {% for bill in bills %}
-            <tr>
-                <td>{{ bill.id }}</td>
-                <td>{{ bill.patient.name if bill.patient else 'Unknown' }}</td>
-                <td>KES {{ "%.2f"|format(bill.amount) }}</td>
-                <td>{{ bill.status }}</td>
-                <td>{{ bill.date_issued.strftime('%Y-%m-%d %H:%M') }}</td>
-                <td>
-                    {% if bill.status != 'Paid' %}
-                    <button class="pay-btn" data-id="{{ bill.id }}">Pay</button>
-                    {% endif %}
-                    <form action="{{ url_for('delete_bill', id=bill.id) }}" method="post" style="display:inline">
-                        <button type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
+          {% for bill in bills %}
+          <tr>
+            <td>{{ bill.patient.name }}</td>
+            <td>{{ bill.amount }}</td>
+            <td>{{ bill.payment_method }}</td>
+            <td>
+              {% if bill.status == 'paid' %}
+                <span class="badge bg-success">Paid</span>
+              {% else %}
+                <span class="badge bg-danger">Unpaid</span>
+              {% endif %}
+            </td>
+            <td>{{ bill.date_issued.strftime('%Y-%m-%d') }}</td>
+            <td>
+              {% if bill.status != 'paid' %}
+              <a href="{{ url_for('mark_bill_paid', bill_id=bill.id) }}" class="btn btn-success btn-sm">
+                <i class="bi bi-check2-circle"></i> Mark Paid
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
+      </table>
+    {% else %}
+      <p class="text-muted small mb-0">No billing records found.</p>
+    {% endif %}
+  </div>
+</div>
 
-    <h3>Add New Bill</h3>
-    <div class="add-bill-form">
-        <form action="{{ url_for('add_bill') }}" method="post">
-            <select name="patient_id" required>
-                <option value="">Select Patient</option>
-                {% for patient in patients %}
-                    <option value="{{ patient.id }}">{{ patient.name }}</option>
-                {% endfor %}
-            </select><br>
-            <input type="number" step="0.01" name="amount" placeholder="Amount" required><br>
-            <input type="text" name="payment_method" placeholder="Payment Method"><br>
-            <input type="text" name="description" placeholder="Description"><br>
-            <button type="submit">Add Bill</button>
-        </form>
+<!-- Add Bill Modal -->
+<div class="modal fade" id="addBillModal" tabindex="-1" aria-labelledby="addBillLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addBillLabel"><i class="bi bi-cash"></i> Add New Bill</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('add_bill') }}" method="POST">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Patient</label>
+            <select class="form-select" name="patient_id" required>
+              <option value="">Select Patient</option>
+              {% for patient in patients %}
+                <option value="{{ patient.id }}">{{ patient.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Amount (Ksh)</label>
+            <input type="number" name="amount" class="form-control" placeholder="Enter amount" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Payment Method</label>
+            <select class="form-select" name="payment_method" required>
+              <option value="">Select Payment Method</option>
+              <option value="Mpesa">M-Pesa</option>
+              <option value="ATM">ATM</option>
+              <option value="Cash">Cash</option>
+              <option value="Insurance">Insurance</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="2" placeholder="Bill description (optional)"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Bill</button>
+        </div>
+      </form>
     </div>
-
-    <script>
-        document.querySelectorAll('.pay-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                let billId = btn.dataset.id;
-                let method = prompt("Enter payment method (e.g., MPESA):");
-                if(!method) return;
-                let phone = prompt("Enter phone number:");
-                if(!phone) return;
-
-                fetch("/pay/simulate", {
-                    method: "POST",
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({bill_id: billId, method: method, phone: phone})
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if(data.status === 'ok'){
-                        alert("Payment successful! Transaction ID: " + data.txn);
-                        location.reload();
-                    } else {
-                        alert("Payment failed");
-                    }
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+  </div>
+</div>
+{% endblock %}
