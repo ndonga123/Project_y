@@ -77,20 +77,22 @@ def dashboard():
     total_patients = Patient.query.count()
     total_appointments = Appointment.query.count()
     unpaid_bills = Bill.query.filter_by(status='Pending').count()
-    total_billing = sum((b.amount for b in Bill.query.all()), 0)
+    total_billing = sum(b.amount for b in Bill.query.filter_by(status='Paid').all())
 
     recent_appointments = Appointment.query.order_by(Appointment.id.desc()).limit(5).all()
     recent_bills = Bill.query.order_by(Bill.date_issued.desc()).limit(5).all()
     notifications = [{'message': 'Welcome to Project_X', 'time': 'Now'}]
 
-    return render_template('dashboard.html',
-                           total_patients=total_patients,
-                           total_appointments=total_appointments,
-                           unpaid_bills=unpaid_bills,
-                           total_billing=int(total_billing),
-                           recent_appointments=recent_appointments,
-                           recent_bills=recent_bills,
-                           notifications=notifications)
+    return render_template(
+        'dashboard.html',
+        total_patients=total_patients,
+        total_appointments=total_appointments,
+        unpaid_bills=unpaid_bills,
+        total_billing=int(total_billing),
+        recent_appointments=recent_appointments,
+        recent_bills=recent_bills,
+        notifications=notifications
+    )
 
 # -------- Patients --------
 @app.route('/patients')
@@ -163,9 +165,11 @@ def api_patient(id):
 # -------- Appointments --------
 @app.route('/appointments')
 def appointments():
-    return render_template('appointments.html',
-                           appointments=Appointment.query.order_by(Appointment.date.asc()).all(),
-                           patients=Patient.query.all())
+    return render_template(
+        'appointments.html',
+        appointments=Appointment.query.order_by(Appointment.date.asc()).all(),
+        patients=Patient.query.all()
+    )
 
 @app.route('/appointment/add', methods=['POST'])
 def add_appointment():
@@ -195,7 +199,10 @@ def delete_appointment(id):
 def billing():
     bills = Bill.query.order_by(Bill.date_issued.desc()).all()
     patients = Patient.query.all()
-    return render_template('billing.html', bills=bills, patients=patients)
+    total_paid = sum(b.amount for b in Bill.query.filter_by(status='Paid').all())
+    total_pending = sum(b.amount for b in Bill.query.filter_by(status='Pending').all())
+    return render_template('billing.html', bills=bills, patients=patients,
+                           total_paid=total_paid, total_pending=total_pending)
 
 @app.route('/bill/add', methods=['POST'])
 def add_bill():
@@ -230,7 +237,7 @@ def simulate_pay():
 
     b = Bill.query.get_or_404(bill_id)
     b.payment_method = method
-    b.transaction_id = random_txn('MP')
+    b.transaction_id = random_txn('TXN')
     b.status = 'Paid'
     db.session.commit()
     return jsonify({'status': 'ok', 'txn': b.transaction_id})
